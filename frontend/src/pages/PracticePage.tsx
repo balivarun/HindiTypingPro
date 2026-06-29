@@ -6,6 +6,7 @@ import TypingArea from '../components/typing/TypingArea';
 import TestControls from '../components/typing/TestControls';
 import ResultModal from '../components/typing/ResultModal';
 import VirtualKeyboard from '../components/typing/VirtualKeyboard';
+import KeyMappingPanel from '../components/typing/KeyMappingPanel';
 import ProgressBar from '../components/ui/ProgressBar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { formatTime } from '../utils/typingUtils';
@@ -189,18 +190,27 @@ const PracticePage = () => {
       {/* Virtual Keyboard */}
       {showKeyboard && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 overflow-x-auto">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">On-Screen Keyboard</span>
               <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">
-                — Hindi chars shown for <span className="font-medium text-primary-500">{layout.replace('_', ' ')}</span> layout
+                — Hindi / English shown for <span className="font-medium text-primary-500">{layout.replace('_', ' ')}</span> layout
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <span className="inline-block w-3 h-3 rounded bg-primary-500"></span> Pressed
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-full border-2 border-blue-400"></span> Pressed
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-full border-2 border-yellow-400 animate-pulse"></span> Next key
+              </div>
             </div>
           </div>
-          <VirtualKeyboard pressedKey={pressedKey} layout={layout} nextChar={paragraph[typedText.length] ?? ''} />
+          <div className="flex gap-4 justify-center overflow-x-auto items-start">
+            <KeyMappingPanel layout={layout} pressedKey={pressedKey} side="left" />
+            <VirtualKeyboard pressedKey={pressedKey} layout={layout} nextChar={paragraph[typedText.length] ?? ''} />
+            <KeyMappingPanel layout={layout} pressedKey={pressedKey} side="right" />
+          </div>
         </div>
       )}
 
