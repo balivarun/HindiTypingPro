@@ -9,16 +9,13 @@ import ResultModal from '../components/typing/ResultModal';
 import VirtualKeyboard from '../components/typing/VirtualKeyboard';
 import WpmSparkline from '../components/typing/WpmSparkline';
 import KeyMappingPanel from '../components/typing/KeyMappingPanel';
-import PaymentModal from '../components/payment/PaymentModal';
+import PaymentWall from '../components/payment/PaymentWall';
 import ProgressBar from '../components/ui/ProgressBar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { formatTime } from '../utils/typingUtils';
 import { FiClock, FiZap, FiTarget, FiAlertCircle } from 'react-icons/fi';
 import { MdKeyboard, MdKeyboardHide } from 'react-icons/md';
 import toast from 'react-hot-toast';
-
-const FREE_TRIAL_SECONDS = 120; // 2 minutes
-const FREE_TRIAL_KEY = 'htp_free_seconds';
 
 const PracticePage = () => {
   const { user } = useAuth();
@@ -33,48 +30,18 @@ const PracticePage = () => {
   const [pressedKey, setPressedKey] = useState('');
   const clearKeyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Free-trial state — premium users bypass this entirely
-  const [freeSecondsUsed, setFreeSecondsUsed] = useState<number>(() =>
-    parseInt(localStorage.getItem(FREE_TRIAL_KEY) || '0', 10)
-  );
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // Null while AuthContext is still hydrating from localStorage
+  const userLoaded = user !== null;
   const isPremium = user?.isPremium === true || user?.role === 'ADMIN';
-  const trialExpired = !isPremium && freeSecondsUsed >= FREE_TRIAL_SECONDS;
 
   const paragraph = currentTest?.paragraph ?? '';
 
   const { typedText, status, stats, timeLeft, currentIndex, wpmHistory, keyMistakes, handleInput, resetTest } =
     useTypingTest(paragraph, timerDuration, layout);
 
-  // Auto-open payment modal once user is confirmed non-premium and trial is expired.
-  // Depends on `user` so it runs after AuthContext loads from localStorage —
-  // this prevents premium users from briefly seeing the payment modal.
-  useEffect(() => {
-    if (user !== null && !isPremium && freeSecondsUsed >= FREE_TRIAL_SECONDS) {
-      setShowPaymentModal(true);
-    }
-  }, [user]);
-
-  // Count free trial seconds while test is running
-  useEffect(() => {
-    if (isPremium || status !== 'running') return;
-    const interval = setInterval(() => {
-      setFreeSecondsUsed(prev => {
-        const next = prev + 1;
-        localStorage.setItem(FREE_TRIAL_KEY, String(next));
-        if (next >= FREE_TRIAL_SECONDS) {
-          setShowPaymentModal(true);
-        }
-        return next;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [status, isPremium]);
-
   // Track physical key presses and clear highlight after 200ms
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (showPaymentModal) return; // Block input while payment modal is open
       setPressedKey(e.key === ' ' ? 'Space' : e.key);
       if (clearKeyTimer.current) clearTimeout(clearKeyTimer.current);
       clearKeyTimer.current = setTimeout(() => setPressedKey(''), 200);
@@ -84,7 +51,7 @@ const PracticePage = () => {
       window.removeEventListener('keydown', onKeyDown);
       if (clearKeyTimer.current) clearTimeout(clearKeyTimer.current);
     };
-  }, [showPaymentModal]);
+  }, []);
 
   const fetchNewTest = useCallback(async (diff = difficulty) => {
     setLoadingTest(true);
@@ -136,14 +103,22 @@ const PracticePage = () => {
   const handleRetry = () => { setShowResult(false); resetTest(); };
   const handleDifficultyChange = (d: Difficulty) => { setDifficulty(d); fetchNewTest(d); };
 
-  const handlePaymentSuccess = () => {
-    setShowPaymentModal(false);
-    setFreeSecondsUsed(0);
-    toast.success('Welcome to Premium! Unlimited typing practice unlocked.');
-  };
-
   const progress = paragraph.length > 0 ? (typedText.length / paragraph.length) * 100 : 0;
-  const freeSecondsLeft = Math.max(0, FREE_TRIAL_SECONDS - freeSecondsUsed);
+
+  // ── Payment wall ─────────────────────────────────────────────────────────────
+  // Wait for user to load so we don't flash the wall for premium users on refresh.
+  if (userLoaded && !isPremium) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Typing Practice</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Get premium access to start practicing</p>
+        </div>
+        <PaymentWall onSuccess={() => { /* isPremium will flip via updateUser, re-render shows practice */ }} />
+      </div>
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
@@ -153,21 +128,9 @@ const PracticePage = () => {
           <p className="text-gray-500 dark:text-gray-400 mt-1">Select your layout and start typing</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Free trial remaining badge */}
-          {!isPremium && (
-            <div className={`text-xs font-medium px-3 py-1.5 rounded-full border ${
-              freeSecondsLeft <= 30
-                ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
-                : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400'
-            }`}>
-              Free trial: {Math.floor(freeSecondsLeft / 60)}:{String(freeSecondsLeft % 60).padStart(2, '0')} left
-            </div>
-          )}
-          {isPremium && (
-            <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400">
-              Premium
-            </div>
-          )}
+          <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400">
+            Premium
+          </div>
           <button
             onClick={() => setShowKeyboard(v => !v)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors border ${
@@ -236,33 +199,14 @@ const PracticePage = () => {
                 {difficulty}
               </span>
             </div>
-
-            {/* Typing area — locked when trial expired */}
-            {trialExpired && !showPaymentModal ? (
-              <div
-                className="rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/10 p-8 text-center cursor-pointer"
-                onClick={() => setShowPaymentModal(true)}
-              >
-                <div className="text-3xl mb-2">🔒</div>
-                <p className="font-semibold text-amber-700 dark:text-amber-400">Free trial ended</p>
-                <p className="text-sm text-amber-600 dark:text-amber-500 mt-1">
-                  <button className="underline font-medium" onClick={() => setShowPaymentModal(true)}>
-                    Upgrade to Premium (₹99)
-                  </button>{' '}
-                  for unlimited practice
-                </p>
-              </div>
-            ) : (
-              <TypingArea
-                paragraph={paragraph}
-                typedText={typedText}
-                currentIndex={currentIndex}
-                onInput={trialExpired ? () => {} : handleInput}
-                isFinished={status === 'finished' || trialExpired}
-              />
-            )}
-
-            {status === 'idle' && !trialExpired && (
+            <TypingArea
+              paragraph={paragraph}
+              typedText={typedText}
+              currentIndex={currentIndex}
+              onInput={handleInput}
+              isFinished={status === 'finished'}
+            />
+            {status === 'idle' && (
               <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500">
                 <FiAlertCircle size={14} />
                 Click on the text area and start typing to begin
@@ -272,7 +216,6 @@ const PracticePage = () => {
         ) : null}
       </div>
 
-      {/* Virtual Keyboard */}
       {showKeyboard && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 overflow-x-auto">
           <div className="flex items-center justify-between mb-4">
@@ -310,11 +253,6 @@ const PracticePage = () => {
           wpmHistory={wpmHistory}
           userName={user?.name}
         />
-      )}
-
-      {/* Payment modal — appears when free trial expires */}
-      {showPaymentModal && (
-        <PaymentModal onSuccess={handlePaymentSuccess} />
       )}
     </div>
   );
