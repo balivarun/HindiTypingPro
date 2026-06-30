@@ -1,0 +1,42 @@
+databases:
+  - name: hindi-typing-pro-db
+    databaseName: hindi_typing_pro
+    plan: free
+
+services:
+  - type: web
+    name: hindi-typing-pro-api
+    runtime: java
+    plan: free
+    rootDir: backend
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/hindi-typing-pro-1.0.0.jar
+    envVars:
+      # Injected automatically from the linked Render PostgreSQL database
+      - key: DB_HOST
+        fromDatabase:
+          name: hindi-typing-pro-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: hindi-typing-pro-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: hindi-typing-pro-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: hindi-typing-pro-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: hindi-typing-pro-db
+          property: password
+      # Auto-generate a secure JWT secret
+      - key: JWT_SECRET
+        generateValue: true
+      # Set this to your Vercel frontend URL after deploying the frontend
+      # e.g. https://hindi-typing-pro.vercel.app
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://hindi-typing-pro.vercel.app

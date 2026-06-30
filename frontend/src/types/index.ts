@@ -8,6 +8,10 @@ export interface User {
   averageSpeed?: number;
   averageAccuracy?: number;
   bestSpeed?: number;
+  currentStreak?: number;
+  longestStreak?: number;
+  dailyGoal?: number;
+  todayWordCount?: number;
 }
 
 export interface AuthResponse {

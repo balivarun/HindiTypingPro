@@ -13,6 +13,7 @@ import com.hinditypingpro.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,7 +49,38 @@ public class TypingResultService {
                 .duration(request.getDuration())
                 .build();
 
-        return toDto(resultRepository.save(result));
+        TypingResultDto dto = toDto(resultRepository.save(result));
+        int wordsTyped = request.getTotalChars() / 5;
+        updateStreakAndGoal(user, wordsTyped);
+        return dto;
+    }
+
+    private void updateStreakAndGoal(User user, int wordsTyped) {
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        if (today.equals(user.getTodayDate())) {
+            user.setTodayWordCount(user.getTodayWordCount() + wordsTyped);
+        } else {
+            user.setTodayWordCount(wordsTyped);
+            user.setTodayDate(today);
+        }
+
+        LocalDate lastActive = user.getLastActiveDate();
+        if (lastActive == null || lastActive.isBefore(yesterday)) {
+            user.setCurrentStreak(1);
+        } else if (lastActive.equals(yesterday)) {
+            user.setCurrentStreak(user.getCurrentStreak() + 1);
+        }
+        // if lastActive == today, no change to streak
+
+        user.setLastActiveDate(today);
+
+        if (user.getCurrentStreak() > user.getLongestStreak()) {
+            user.setLongestStreak(user.getCurrentStreak());
+        }
+
+        userRepository.save(user);
     }
 
     public List<TypingResultDto> getUserHistory(String userEmail) {

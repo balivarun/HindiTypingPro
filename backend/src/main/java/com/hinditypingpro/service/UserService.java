@@ -38,7 +38,19 @@ public class UserService {
                 .averageSpeed(Math.round(avgSpeed * 100.0) / 100.0)
                 .averageAccuracy(Math.round(avgAccuracy * 100.0) / 100.0)
                 .bestSpeed(Math.round(bestSpeed * 100.0) / 100.0)
+                .currentStreak(user.getCurrentStreak())
+                .longestStreak(user.getLongestStreak())
+                .dailyGoal(user.getDailyGoal())
+                .todayWordCount(user.getTodayWordCount())
                 .build();
+    }
+
+    public UserProfileDto updateDailyGoal(String email, int goal) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setDailyGoal(goal);
+        userRepository.save(user);
+        return getProfile(email);
     }
 
     public List<User> getAllUsers() {

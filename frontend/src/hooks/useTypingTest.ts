@@ -11,6 +11,8 @@ interface UseTypingTestResult {
   timeLeft: number;
   timeElapsed: number;
   currentIndex: number;
+  wpmHistory: { time: number; wpm: number }[];
+  keyMistakes: Record<string, number>;
   handleInput: (value: string) => void;
   resetTest: () => void;
   startTest: () => void;
@@ -23,14 +25,22 @@ export const useTypingTest = (
 ): UseTypingTestResult => {
   const [typedText, setTypedText] = useState('');
   const [status, setStatus] = useState<TestStatus>('idle');
-  const [timeLeft, setTimeLeft] = useState(timerDuration);
+  const [timeLeft, setTimeLeft] = useState<number>(timerDuration);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [stats, setStats] = useState<TypingStats>({
     wpm: 0, cpm: 0, accuracy: 100, mistakes: 0,
     correctChars: 0, wrongChars: 0, totalChars: 0, timeElapsed: 0,
   });
+  const [wpmHistory, setWpmHistory] = useState<{ time: number; wpm: number }[]>([]);
+  const [keyMistakes, setKeyMistakes] = useState<Record<string, number>>({});
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Ref so the interval can always read the latest computed stats (wpm)
+  const statsRef = useRef<TypingStats>(stats);
+  // Ref to track elapsed time inside the interval without stale closure
+  const elapsedRef = useRef(0);
+  // Ref to detect only forward keystrokes for mistake tracking
+  const prevLengthRef = useRef(0);
 
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -41,6 +51,9 @@ export const useTypingTest = (
 
   const startTimer = useCallback(() => {
     intervalRef.current = setInterval(() => {
+      elapsedRef.current += 1;
+      const elapsed = elapsedRef.current;
+
       setTimeLeft(prev => {
         if (prev <= 1) {
           stopTimer();
@@ -49,7 +62,12 @@ export const useTypingTest = (
         }
         return prev - 1;
       });
-      setTimeElapsed(prev => prev + 1);
+      setTimeElapsed(elapsed);
+
+      // Record WPM snapshot every 5 seconds
+      if (elapsed % 5 === 0) {
+        setWpmHistory(prev => [...prev, { time: elapsed, wpm: statsRef.current.wpm }]);
+      }
     }, 1000);
   }, [stopTimer]);
 
@@ -64,7 +82,18 @@ export const useTypingTest = (
     setTypedText(value);
     const elapsed = timerDuration - timeLeft + 1;
     const newStats = calculateStats(value, paragraph, elapsed);
+    statsRef.current = newStats;
     setStats(newStats);
+
+    // Track key mistakes — only on forward progress (new character added)
+    if (value.length > prevLengthRef.current && value.length <= paragraph.length) {
+      const lastPos = value.length - 1;
+      if (value[lastPos] !== paragraph[lastPos]) {
+        const missedChar = paragraph[lastPos];
+        setKeyMistakes(prev => ({ ...prev, [missedChar]: (prev[missedChar] || 0) + 1 }));
+      }
+    }
+    prevLengthRef.current = value.length;
 
     if (value.length >= paragraph.length) {
       stopTimer();
@@ -84,6 +113,11 @@ export const useTypingTest = (
     setTimeLeft(timerDuration);
     setTimeElapsed(0);
     setStats({ wpm: 0, cpm: 0, accuracy: 100, mistakes: 0, correctChars: 0, wrongChars: 0, totalChars: 0, timeElapsed: 0 });
+    setWpmHistory([]);
+    setKeyMistakes({});
+    elapsedRef.current = 0;
+    prevLengthRef.current = 0;
+    statsRef.current = { wpm: 0, cpm: 0, accuracy: 100, mistakes: 0, correctChars: 0, wrongChars: 0, totalChars: 0, timeElapsed: 0 };
   }, [stopTimer, timerDuration]);
 
   useEffect(() => {
@@ -101,6 +135,8 @@ export const useTypingTest = (
     timeLeft,
     timeElapsed,
     currentIndex: typedText.length,
+    wpmHistory,
+    keyMistakes,
     handleInput,
     resetTest,
     startTest,

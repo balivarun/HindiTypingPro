@@ -21,4 +21,8 @@ public class UserProfileDto {
     private Double averageSpeed;
     private Double averageAccuracy;
     private Double bestSpeed;
+    private Integer currentStreak;
+    private Integer longestStreak;
+    private Integer dailyGoal;
+    private Integer todayWordCount;
 }

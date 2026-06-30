@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Difficulty, TimerOption, TypingLayout, TypingTest } from '../types';
 import { testService } from '../services/testService';
 import { useTypingTest } from '../hooks/useTypingTest';
+import { useAuth } from '../context/AuthContext';
 import TypingArea from '../components/typing/TypingArea';
 import TestControls from '../components/typing/TestControls';
 import ResultModal from '../components/typing/ResultModal';
 import VirtualKeyboard from '../components/typing/VirtualKeyboard';
+import WpmSparkline from '../components/typing/WpmSparkline';
 import KeyMappingPanel from '../components/typing/KeyMappingPanel';
 import ProgressBar from '../components/ui/ProgressBar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -15,6 +17,7 @@ import { MdKeyboard, MdKeyboardHide } from 'react-icons/md';
 import toast from 'react-hot-toast';
 
 const PracticePage = () => {
+  const { user } = useAuth();
   const [layout, setLayout] = useState<TypingLayout>('KRUTIDEV');
   const [difficulty, setDifficulty] = useState<Difficulty>('BEGINNER');
   const [timerDuration, setTimerDuration] = useState<TimerOption>(60);
@@ -28,7 +31,7 @@ const PracticePage = () => {
 
   const paragraph = currentTest?.paragraph ?? '';
 
-  const { typedText, status, stats, timeLeft, currentIndex, handleInput, resetTest } =
+  const { typedText, status, stats, timeLeft, currentIndex, wpmHistory, keyMistakes, handleInput, resetTest } =
     useTypingTest(paragraph, timerDuration, layout);
 
   // Track physical key presses and clear highlight after 200ms
@@ -154,6 +157,9 @@ const PracticePage = () => {
           </div>
         </div>
 
+        {/* Live WPM sparkline — shown only while test is running and data is available */}
+        <WpmSparkline wpmHistory={wpmHistory} isRunning={status === 'running'} />
+
         <ProgressBar value={Math.round(progress)} max={100} />
 
         {loadingTest ? (
@@ -221,6 +227,9 @@ const PracticePage = () => {
           onRetry={handleRetry}
           onNewTest={handleNewTest}
           saving={savingResult}
+          keyMistakes={keyMistakes}
+          wpmHistory={wpmHistory}
+          userName={user?.name}
         />
       )}
     </div>

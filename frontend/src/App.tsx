@@ -14,6 +14,8 @@ import HistoryPage from './pages/HistoryPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import SkillPathPage from './pages/SkillPathPage';
+import ExamModePage from './pages/ExamModePage';
 
 const App = () => {
   return (
@@ -49,6 +51,12 @@ const App = () => {
             } />
             <Route path="/admin" element={
               <ProtectedRoute adminOnly><Layout><AdminPage /></Layout></ProtectedRoute>
+            } />
+            <Route path="/skill-path" element={
+              <ProtectedRoute><Layout><SkillPathPage /></Layout></ProtectedRoute>
+            } />
+            <Route path="/exam" element={
+              <ProtectedRoute><Layout><ExamModePage /></Layout></ProtectedRoute>
             } />
 
             <Route path="*" element={<Navigate to="/" replace />} />

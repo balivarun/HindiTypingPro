@@ -27,4 +27,13 @@ public class UserController {
         UserProfileDto profile = userService.getProfile(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(profile));
     }
+
+    @PutMapping("/daily-goal")
+    @Operation(summary = "Update daily word goal")
+    public ResponseEntity<ApiResponse<UserProfileDto>> updateDailyGoal(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam int goal) {
+        UserProfileDto profile = userService.updateDailyGoal(userDetails.getUsername(), goal);
+        return ResponseEntity.ok(ApiResponse.success(profile));
+    }
 }

@@ -36,6 +36,12 @@ const Navbar = () => {
                 <Link to="/practice" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium">
                   Practice
                 </Link>
+                <Link to="/exam" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium">
+                  Exam Mode
+                </Link>
+                <Link to="/skill-path" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium">
+                  Skill Path
+                </Link>
                 <Link to="/history" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium">
                   History
                 </Link>
@@ -88,6 +94,8 @@ const Navbar = () => {
           <div className="md:hidden pb-3 flex flex-col gap-2">
             <Link to="/dashboard" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>Dashboard</Link>
             <Link to="/practice" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>Practice</Link>
+            <Link to="/exam" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>Exam Mode</Link>
+            <Link to="/skill-path" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>Skill Path</Link>
             <Link to="/history" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>History</Link>
             <Link to="/leaderboard" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>Leaderboard</Link>
             {isAdmin && <Link to="/admin" className="px-3 py-2 text-accent-500" onClick={() => setMenuOpen(false)}>Admin</Link>}

@@ -6,6 +6,11 @@ export const userService = {
     const { data } = await api.get<ApiResponse<User>>('/users/profile');
     return data.data;
   },
+
+  updateDailyGoal: async (goal: number) => {
+    const { data } = await api.put<ApiResponse<User>>(`/users/daily-goal?goal=${goal}`);
+    return data.data;
+  },
 };
 
 export const adminService = {

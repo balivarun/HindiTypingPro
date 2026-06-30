@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -42,6 +43,28 @@ public class User implements UserDetails {
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "current_streak")
+    @Builder.Default
+    private Integer currentStreak = 0;
+
+    @Column(name = "longest_streak")
+    @Builder.Default
+    private Integer longestStreak = 0;
+
+    @Column(name = "last_active_date")
+    private LocalDate lastActiveDate;
+
+    @Column(name = "daily_goal")
+    @Builder.Default
+    private Integer dailyGoal = 200;
+
+    @Column(name = "today_word_count")
+    @Builder.Default
+    private Integer todayWordCount = 0;
+
+    @Column(name = "today_date")
+    private LocalDate todayDate;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -5,6 +5,7 @@ import { userService } from '../services/userService';
 import { testService } from '../services/testService';
 import { User, TypingResult } from '../types';
 import StatCard from '../components/ui/StatCard';
+import StreakWidget from '../components/ui/StreakWidget';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { FiZap, FiTarget, FiActivity, FiAward, FiArrowRight } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
@@ -92,6 +93,13 @@ const DashboardPage = () => {
         <StatCard label="Avg Speed" value={profile?.averageSpeed ?? 0} icon={<FiActivity />} color="text-blue-500" suffix="WPM" />
         <StatCard label="Avg Accuracy" value={`${profile?.averageAccuracy ?? 0}%`} icon={<FiTarget />} color="text-green-500" />
       </div>
+
+      <StreakWidget
+        currentStreak={profile?.currentStreak ?? 0}
+        longestStreak={profile?.longestStreak ?? 0}
+        todayWordCount={profile?.todayWordCount ?? 0}
+        dailyGoal={profile?.dailyGoal ?? 200}
+      />
 
       {recent.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
