@@ -1,8 +1,3 @@
-databases:
-  - name: hindi-typing-pro-db
-    databaseName: hindi_typing_pro
-    plan: free
-
 services:
   - type: web
     name: hindi-typing-pro-api
@@ -11,27 +6,20 @@ services:
     rootDir: backend
     dockerfilePath: ./Dockerfile
     envVars:
-      - key: DB_HOST
-        fromDatabase:
-          name: hindi-typing-pro-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: hindi-typing-pro-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: hindi-typing-pro-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: hindi-typing-pro-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: hindi-typing-pro-db
-          property: password
+      # ── Database (from your other Render account) ──────────────────────────
+      # Paste the JDBC URL from the other account's PostgreSQL → Connections tab
+      # Format: jdbc:postgresql://<host>:<port>/<dbname>
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+
+      # ── Security ──────────────────────────────────────────────────────────
       - key: JWT_SECRET
         generateValue: true
+
+      # ── CORS — set to your Vercel frontend URL ────────────────────────────
       - key: CORS_ALLOWED_ORIGINS
         value: https://hindi-typing-pro.vercel.app
