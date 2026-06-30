@@ -6,13 +6,11 @@ databases:
 services:
   - type: web
     name: hindi-typing-pro-api
-    runtime: java
+    runtime: docker
     plan: free
     rootDir: backend
-    buildCommand: mvn clean package -DskipTests
-    startCommand: java -jar target/hindi-typing-pro-1.0.0.jar
+    dockerfilePath: ./Dockerfile
     envVars:
-      # Injected automatically from the linked Render PostgreSQL database
       - key: DB_HOST
         fromDatabase:
           name: hindi-typing-pro-db
@@ -33,10 +31,7 @@ services:
         fromDatabase:
           name: hindi-typing-pro-db
           property: password
-      # Auto-generate a secure JWT secret
       - key: JWT_SECRET
         generateValue: true
-      # Set this to your Vercel frontend URL after deploying the frontend
-      # e.g. https://hindi-typing-pro.vercel.app
       - key: CORS_ALLOWED_ORIGINS
         value: https://hindi-typing-pro.vercel.app
