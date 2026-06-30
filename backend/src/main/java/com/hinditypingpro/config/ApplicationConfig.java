@@ -40,6 +40,7 @@ public class ApplicationConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // Strength 8 instead of default 10 — still secure, ~4x faster on free-tier CPU
+        return new BCryptPasswordEncoder(8);
     }
 }
