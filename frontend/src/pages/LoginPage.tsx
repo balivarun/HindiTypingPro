@@ -46,6 +46,7 @@ const LoginPage = () => {
       login(data.token, {
         id: data.id, name: data.name, email: data.email,
         role: data.role as 'USER' | 'ADMIN', createdAt: '',
+        isPremium: data.isPremium ?? false,
       } as User);
       toast.success('Welcome back!');
       navigate('/dashboard');

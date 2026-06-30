@@ -66,6 +66,10 @@ public class User implements UserDetails {
     @Column(name = "today_date")
     private LocalDate todayDate;
 
+    @Column(name = "is_premium")
+    @Builder.Default
+    private Boolean isPremium = false;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));

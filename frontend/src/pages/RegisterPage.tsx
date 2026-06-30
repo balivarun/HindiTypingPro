@@ -22,6 +22,7 @@ const RegisterPage = () => {
       login(data.token, {
         id: data.id, name: data.name, email: data.email,
         role: data.role as 'USER' | 'ADMIN', createdAt: '',
+        isPremium: data.isPremium ?? false,
       } as User);
       toast.success('Account created successfully!');
       navigate('/dashboard');

@@ -43,6 +43,7 @@ public class AuthService {
                 .name(savedUser.getName())
                 .email(savedUser.getEmail())
                 .role(savedUser.getRole().name())
+                .isPremium(savedUser.getIsPremium())
                 .build();
     }
 
@@ -63,6 +64,7 @@ public class AuthService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .isPremium(user.getIsPremium())
                 .build();
     }
 }

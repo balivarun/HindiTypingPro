@@ -23,3 +23,13 @@ services:
       # ── CORS — set to your Vercel frontend URL ────────────────────────────
       - key: CORS_ALLOWED_ORIGINS
         value: https://hindi-typing-pro.vercel.app
+
+      # ── Razorpay ──────────────────────────────────────────────────────────
+      # Use rzp_test_* keys for testing, rzp_live_* for production
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      # Optional: change price in paise (9900 = ₹99)
+      - key: PREMIUM_PRICE_PAISE
+        value: "9900"

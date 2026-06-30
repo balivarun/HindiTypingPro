@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'USER' | 'ADMIN';
   createdAt: string;
+  isPremium?: boolean;
   totalTests?: number;
   averageSpeed?: number;
   averageAccuracy?: number;
@@ -21,6 +22,7 @@ export interface AuthResponse {
   name: string;
   email: string;
   role: string;
+  isPremium?: boolean;
 }
 
 export interface TypingTest {
