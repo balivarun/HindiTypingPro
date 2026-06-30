@@ -46,6 +46,13 @@ const PracticePage = () => {
   const { typedText, status, stats, timeLeft, currentIndex, wpmHistory, keyMistakes, handleInput, resetTest } =
     useTypingTest(paragraph, timerDuration, layout);
 
+  // Auto-open payment modal if trial already expired when page loads
+  useEffect(() => {
+    if (!isPremium && freeSecondsUsed >= FREE_TRIAL_SECONDS) {
+      setShowPaymentModal(true);
+    }
+  }, []);
+
   // Count free trial seconds while test is running
   useEffect(() => {
     if (isPremium || status !== 'running') return;
