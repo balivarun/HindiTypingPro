@@ -5,6 +5,7 @@ export interface CreateOrderResponse {
   amount: number;
   currency: string;
   keyId: string;
+  testMode: boolean;
 }
 
 export const paymentService = {
@@ -17,4 +18,7 @@ export const paymentService = {
       razorpayOrderId: data.razorpay_order_id,
       razorpaySignature: data.razorpay_signature,
     }).then(r => r.data),
+
+  testActivate: (orderId: string): Promise<{ success: boolean; isPremium: boolean }> =>
+    api.post('/payment/test-activate', { orderId }).then(r => r.data),
 };

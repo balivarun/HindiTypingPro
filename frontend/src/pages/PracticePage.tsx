@@ -46,12 +46,14 @@ const PracticePage = () => {
   const { typedText, status, stats, timeLeft, currentIndex, wpmHistory, keyMistakes, handleInput, resetTest } =
     useTypingTest(paragraph, timerDuration, layout);
 
-  // Auto-open payment modal if trial already expired when page loads
+  // Auto-open payment modal once user is confirmed non-premium and trial is expired.
+  // Depends on `user` so it runs after AuthContext loads from localStorage —
+  // this prevents premium users from briefly seeing the payment modal.
   useEffect(() => {
-    if (!isPremium && freeSecondsUsed >= FREE_TRIAL_SECONDS) {
+    if (user !== null && !isPremium && freeSecondsUsed >= FREE_TRIAL_SECONDS) {
       setShowPaymentModal(true);
     }
-  }, []);
+  }, [user]);
 
   // Count free trial seconds while test is running
   useEffect(() => {

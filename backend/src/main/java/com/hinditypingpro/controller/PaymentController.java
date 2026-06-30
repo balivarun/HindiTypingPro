@@ -20,8 +20,7 @@ public class PaymentController {
 
     @PostMapping("/create-order")
     public ResponseEntity<CreateOrderResponse> createOrder(@AuthenticationPrincipal User user) {
-        CreateOrderResponse response = paymentService.createOrder(user);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(paymentService.createOrder(user));
     }
 
     @PostMapping("/verify")
@@ -29,6 +28,19 @@ public class PaymentController {
             @RequestBody VerifyPaymentRequest request,
             @AuthenticationPrincipal User user) {
         paymentService.verifyAndActivate(request, user);
+        return ResponseEntity.ok(Map.of("success", true, "isPremium", true));
+    }
+
+    /**
+     * Test-mode endpoint: bypasses Razorpay and directly upgrades the user.
+     * Only works when RAZORPAY_KEY_ID is not configured (placeholder key).
+     * Remove or disable this in production once real keys are set.
+     */
+    @PostMapping("/test-activate")
+    public ResponseEntity<Map<String, Object>> testActivate(
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal User user) {
+        paymentService.testActivate(body.get("orderId"), user);
         return ResponseEntity.ok(Map.of("success", true, "isPremium", true));
     }
 }

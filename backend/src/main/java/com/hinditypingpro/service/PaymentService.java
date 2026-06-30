@@ -19,10 +19,13 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
+
+    private static final String PLACEHOLDER_KEY = "rzp_test_placeholder";
 
     @Value("${razorpay.key.id}")
     private String keyId;
@@ -36,7 +39,31 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
 
+    public boolean isTestMode() {
+        return PLACEHOLDER_KEY.equals(keyId);
+    }
+
     public CreateOrderResponse createOrder(User user) {
+        if (isTestMode()) {
+            // No real Razorpay keys — return a test order so developers can test the flow
+            String fakeOrderId = "test_order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
+            Payment payment = Payment.builder()
+                    .user(user)
+                    .razorpayOrderId(fakeOrderId)
+                    .amount(priceInPaise)
+                    .currency("INR")
+                    .status(Payment.Status.CREATED)
+                    .build();
+            paymentRepository.save(payment);
+            return CreateOrderResponse.builder()
+                    .orderId(fakeOrderId)
+                    .amount(priceInPaise)
+                    .currency("INR")
+                    .keyId(keyId)
+                    .testMode(true)
+                    .build();
+        }
+
         try {
             RazorpayClient client = new RazorpayClient(keyId, keySecret);
 
@@ -61,6 +88,7 @@ public class PaymentService {
                     .amount(priceInPaise)
                     .currency("INR")
                     .keyId(keyId)
+                    .testMode(false)
                     .build();
 
         } catch (RazorpayException e) {
@@ -69,9 +97,22 @@ public class PaymentService {
     }
 
     @Transactional
+    public void testActivate(String orderId, User user) {
+        if (!isTestMode()) {
+            throw new IllegalStateException("Test mode is only available without real Razorpay keys");
+        }
+        paymentRepository.findByRazorpayOrderId(orderId).ifPresent(p -> {
+            p.setRazorpayPaymentId("test_pay_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
+            p.setStatus(Payment.Status.PAID);
+            paymentRepository.save(p);
+        });
+        user.setIsPremium(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
     public void verifyAndActivate(VerifyPaymentRequest req, User user) {
         if (!verifySignature(req.getRazorpayOrderId(), req.getRazorpayPaymentId(), req.getRazorpaySignature())) {
-            // Mark payment as failed
             paymentRepository.findByRazorpayOrderId(req.getRazorpayOrderId()).ifPresent(p -> {
                 p.setStatus(Payment.Status.FAILED);
                 paymentRepository.save(p);
@@ -79,7 +120,6 @@ public class PaymentService {
             throw new IllegalArgumentException("Payment signature verification failed");
         }
 
-        // Update payment record
         paymentRepository.findByRazorpayOrderId(req.getRazorpayOrderId()).ifPresent(p -> {
             p.setRazorpayPaymentId(req.getRazorpayPaymentId());
             p.setRazorpaySignature(req.getRazorpaySignature());
@@ -87,7 +127,6 @@ public class PaymentService {
             paymentRepository.save(p);
         });
 
-        // Upgrade user to premium
         user.setIsPremium(true);
         userRepository.save(user);
     }

@@ -14,4 +14,5 @@ public class CreateOrderResponse {
     private Integer amount;
     private String currency;
     private String keyId;
+    private Boolean testMode;
 }

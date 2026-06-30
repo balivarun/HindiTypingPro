@@ -21,11 +21,33 @@ const FEATURES = [
 const PaymentModal = ({ onSuccess }: Props) => {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [testOrderId, setTestOrderId] = useState<string | null>(null);
+
+  const activatePremium = () => {
+    updateUser({ isPremium: true });
+    localStorage.removeItem('htp_free_seconds');
+    toast.success('Premium unlocked! Unlimited practice access granted.');
+    onSuccess();
+  };
 
   const handlePay = async () => {
     setLoading(true);
     try {
       const order = await paymentService.createOrder();
+
+      if (order.testMode) {
+        // Real Razorpay keys not configured — use test flow
+        setTestOrderId(order.orderId);
+        setLoading(false);
+        return;
+      }
+
+      // Ensure Razorpay checkout script loaded
+      if (typeof window.Razorpay === 'undefined') {
+        toast.error('Razorpay script failed to load. Check your internet connection and try again.');
+        setLoading(false);
+        return;
+      }
 
       const options: RazorpayOptions = {
         key: order.keyId,
@@ -39,30 +61,36 @@ const PaymentModal = ({ onSuccess }: Props) => {
         handler: async (response) => {
           try {
             await paymentService.verifyPayment(response);
-            updateUser({ isPremium: true });
-            // Clear free trial counter since user is now premium
-            localStorage.removeItem('htp_free_seconds');
-            toast.success('Payment successful! You now have unlimited access.');
-            onSuccess();
+            activatePremium();
           } catch {
-            toast.error('Payment verification failed. Contact support.');
+            toast.error('Payment verification failed. Contact support if money was deducted.');
           }
         },
-        modal: {
-          ondismiss: () => setLoading(false),
-        },
+        modal: { ondismiss: () => setLoading(false) },
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      new window.Razorpay(options).open();
+
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.message ?? 'Unknown error';
+      toast.error(`Payment error: ${msg}`);
+      setLoading(false);
+    }
+  };
+
+  const handleTestActivate = async () => {
+    if (!testOrderId) return;
+    setLoading(true);
+    try {
+      await paymentService.testActivate(testOrderId);
+      activatePremium();
     } catch {
-      toast.error('Could not initiate payment. Please try again.');
+      toast.error('Test activation failed.');
       setLoading(false);
     }
   };
 
   return (
-    // Full-screen backdrop — no close button intentionally (trial is over)
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
 
@@ -96,37 +124,63 @@ const PaymentModal = ({ onSuccess }: Props) => {
 
         {/* CTA */}
         <div className="px-8 pb-8 space-y-3">
-          <button
-            onClick={handlePay}
-            disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                </svg>
-                Opening payment…
-              </>
-            ) : (
-              <>
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                Pay {PRICE_DISPLAY} with Razorpay
-              </>
-            )}
-          </button>
+          {/* Test mode panel — shown when Razorpay keys are not configured */}
+          {testOrderId ? (
+            <div className="space-y-3">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-2xl p-4 text-sm">
+                <p className="font-semibold text-amber-800 dark:text-amber-300 mb-1">
+                  Test Mode — Razorpay keys not configured
+                </p>
+                <p className="text-amber-700 dark:text-amber-400 text-xs">
+                  Add <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">RAZORPAY_KEY_ID</code> and{' '}
+                  <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">RAZORPAY_KEY_SECRET</code>{' '}
+                  in Render to enable real payments.
+                </p>
+              </div>
+              <button
+                onClick={handleTestActivate}
+                disabled={loading}
+                className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    Activating…
+                  </>
+                ) : 'Simulate Successful Payment (Test)'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handlePay}
+              disabled={loading}
+              className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                  </svg>
+                  Connecting…
+                </>
+              ) : (
+                <>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                  Pay {PRICE_DISPLAY} with Razorpay
+                </>
+              )}
+            </button>
+          )}
 
           <p className="text-center text-xs text-gray-400 dark:text-gray-500">
             Secured by Razorpay · UPI, Cards, Net Banking accepted
           </p>
-
-          {/* Test mode hint — remove in production */}
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-700 dark:text-amber-400">
-            <strong>Test mode:</strong> Use card 4111 1111 1111 1111, any future expiry, any CVV.
-          </div>
         </div>
       </div>
     </div>
