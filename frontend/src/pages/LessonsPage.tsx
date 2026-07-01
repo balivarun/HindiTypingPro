@@ -162,25 +162,25 @@ const LessonPractice = ({ lesson, onBack }: { lesson: Lesson; onBack: () => void
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-              <FiClock className="text-primary-500" size={20} />
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="flex items-center gap-1.5 sm:gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-2 sm:p-3">
+              <FiClock className="text-primary-500 hidden sm:block" size={20} />
               <div>
-                <div className="text-xl font-bold text-gray-900 dark:text-white font-mono">{formatTime(timeLeft)}</div>
-                <div className="text-xs text-gray-400">Time Left</div>
+                <div className="text-base sm:text-xl font-bold text-gray-900 dark:text-white font-mono">{formatTime(timeLeft)}</div>
+                <div className="text-xs text-gray-400">Time</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-              <FiZap className="text-orange-500" size={20} />
+            <div className="flex items-center gap-1.5 sm:gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-2 sm:p-3">
+              <FiZap className="text-orange-500 hidden sm:block" size={20} />
               <div>
-                <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.wpm}</div>
+                <div className="text-base sm:text-xl font-bold text-gray-900 dark:text-white">{stats.wpm}</div>
                 <div className="text-xs text-gray-400">WPM</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-              <FiTarget className="text-green-500" size={20} />
+            <div className="flex items-center gap-1.5 sm:gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-2 sm:p-3">
+              <FiTarget className="text-green-500 hidden sm:block" size={20} />
               <div>
-                <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.accuracy}%</div>
+                <div className="text-base sm:text-xl font-bold text-gray-900 dark:text-white">{stats.accuracy}%</div>
                 <div className="text-xs text-gray-400">Accuracy</div>
               </div>
             </div>

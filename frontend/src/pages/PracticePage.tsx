@@ -45,7 +45,7 @@ const PracticePage = () => {
   const [loadingTest, setLoadingTest] = useState(false);
   const [savingResult, setSavingResult] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [showKeyboard, setShowKeyboard] = useState(true);
+  const [showKeyboard, setShowKeyboard] = useState(() => window.innerWidth >= 640);
   const [pressedKey, setPressedKey] = useState('');
   const [customTextMode, setCustomTextMode] = useState(false);
   const [customText, setCustomText] = useState('');
@@ -165,12 +165,12 @@ const PracticePage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Typing Practice</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Select your layout and start typing</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Typing Practice</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm sm:text-base">Select your layout and start typing</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {isPremium ? (
             <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400">
               Premium
@@ -182,7 +182,7 @@ const PracticePage = () => {
           )}
           <button
             onClick={() => setShowKeyboard(v => !v)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors border ${
+            className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors border ${
               showKeyboard
                 ? 'bg-primary-600 text-white border-primary-600'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -245,25 +245,25 @@ const PracticePage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-            <FiClock className="text-primary-500" size={24} />
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-2 sm:p-4">
+            <FiClock className="text-primary-500 hidden sm:block" size={24} />
             <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white font-mono">{formatTime(timeLeft)}</div>
-              <div className="text-xs text-gray-400">Time Left</div>
+              <div className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white font-mono">{formatTime(timeLeft)}</div>
+              <div className="text-xs text-gray-400">Time</div>
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-            <FiZap className="text-orange-500" size={24} />
+          <div className="flex items-center gap-1.5 sm:gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-2 sm:p-4">
+            <FiZap className="text-orange-500 hidden sm:block" size={24} />
             <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.wpm}</div>
+              <div className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.wpm}</div>
               <div className="text-xs text-gray-400">WPM</div>
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-            <FiTarget className="text-green-500" size={24} />
+          <div className="flex items-center gap-1.5 sm:gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-2 sm:p-4">
+            <FiTarget className="text-green-500 hidden sm:block" size={24} />
             <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.accuracy}%</div>
+              <div className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.accuracy}%</div>
               <div className="text-xs text-gray-400">Accuracy</div>
             </div>
           </div>
@@ -320,7 +320,7 @@ const PracticePage = () => {
       </div>
 
       {showKeyboard && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 overflow-x-auto">
+        <div className="hidden sm:block bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 overflow-x-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
               <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">On-Screen Keyboard</span>

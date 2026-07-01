@@ -104,7 +104,7 @@ const TypingArea = ({
   return (
     <div className="relative">
       <div
-        className="font-hindi text-2xl leading-relaxed p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 min-h-[160px] cursor-text select-none"
+        className="font-hindi text-base sm:text-xl md:text-2xl leading-relaxed p-3 sm:p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 min-h-[120px] sm:min-h-[160px] cursor-text select-none"
         onClick={() => textareaRef.current?.focus()}
       >
         {renderParagraph()}

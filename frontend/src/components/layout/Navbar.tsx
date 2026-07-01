@@ -103,15 +103,30 @@ const Navbar = () => {
         </div>
 
         {menuOpen && isAuthenticated && (
-          <div className="md:hidden pb-3 flex flex-col gap-1">
-            <Link to="/dashboard" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>{t('dashboard')}</Link>
-            <Link to="/practice" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>{t('practice')}</Link>
-            <Link to="/lessons" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>{t('lessons')}</Link>
-            <Link to="/exam" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>{t('examMode')}</Link>
-            <Link to="/skill-path" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>{t('skillPath')}</Link>
-            <Link to="/history" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>{t('history')}</Link>
-            <Link to="/leaderboard" className="px-3 py-2 text-gray-600 dark:text-gray-300" onClick={() => setMenuOpen(false)}>{t('leaderboard')}</Link>
-            {isAdmin && <Link to="/admin" className="px-3 py-2 text-accent-500" onClick={() => setMenuOpen(false)}>{t('admin')}</Link>}
+          <div className="md:hidden border-t border-gray-100 dark:border-gray-700 py-2 flex flex-col">
+            {[
+              { to: '/dashboard', label: t('dashboard') },
+              { to: '/practice', label: t('practice') },
+              { to: '/lessons', label: t('lessons') },
+              { to: '/exam', label: t('examMode') },
+              { to: '/skill-path', label: t('skillPath') },
+              { to: '/history', label: t('history') },
+              { to: '/leaderboard', label: t('leaderboard') },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMenuOpen(false)}
+                className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 rounded-lg transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+            {isAdmin && (
+              <Link to="/admin" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-sm font-medium text-accent-500 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                {t('admin')}
+              </Link>
+            )}
           </div>
         )}
       </div>

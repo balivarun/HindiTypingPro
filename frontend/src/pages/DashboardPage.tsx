@@ -25,7 +25,7 @@ const ExamCountdown = ({ examDate, examType }: { examDate: string; examType: str
     indigo: 'from-indigo-500 to-blue-600',
   };
   return (
-    <div className={`bg-gradient-to-r ${colors[urgency]} text-white rounded-2xl p-5 flex items-center justify-between`}>
+    <div className={`bg-gradient-to-r ${colors[urgency]} text-white rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3`}>
       <div className="flex items-center gap-4">
         <div className="bg-white/20 rounded-xl p-3">
           <FiCalendar size={24} />
@@ -100,16 +100,16 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Welcome, {authUser?.name}!
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Ready for your next typing session?</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm sm:text-base">Ready for your next typing session?</p>
         </div>
         <Link
           to="/practice"
-          className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors"
+          className="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors text-sm sm:text-base"
         >
           Start Practice <FiArrowRight />
         </Link>
