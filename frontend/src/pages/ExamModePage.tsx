@@ -360,6 +360,7 @@ const ExamModePage = () => {
                   currentIndex={currentIndex}
                   onInput={handleInput}
                   isFinished={isFinished}
+                  layout={layout}
                 />
                 {status === 'idle' && (
                   <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500">

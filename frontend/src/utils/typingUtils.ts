@@ -21,9 +21,13 @@ export const calculateStats = (
   let wrongChars = 0;
   let mistakes = 0;
 
-  const len = Math.min(typed.length, original.length);
+  // Split into Unicode codepoints so Devanagari combining marks are handled correctly
+  const typedChars = [...typed.normalize('NFC')];
+  const origChars = [...original.normalize('NFC')];
+  const len = Math.min(typedChars.length, origChars.length);
+
   for (let i = 0; i < len; i++) {
-    if (typed[i] === original[i]) {
+    if (typedChars[i] === origChars[i]) {
       correctChars++;
     } else {
       wrongChars++;
@@ -31,7 +35,7 @@ export const calculateStats = (
     }
   }
 
-  const totalChars = typed.length;
+  const totalChars = typedChars.length;
   const minutes = timeElapsedSeconds / 60;
   const wordsTyped = typed.trim().split(/\s+/).filter(Boolean).length;
   const wpm = minutes > 0 ? Math.round(wordsTyped / minutes) : 0;

@@ -286,6 +286,7 @@ const PracticePage = () => {
               currentIndex={currentIndex}
               onInput={handleInput}
               isFinished={status === 'finished'}
+              layout={layout}
             />
           </div>
         ) : currentTest ? (
@@ -306,6 +307,7 @@ const PracticePage = () => {
               currentIndex={currentIndex}
               onInput={handleInput}
               isFinished={status === 'finished'}
+              layout={layout}
             />
             {status === 'idle' && (
               <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500">

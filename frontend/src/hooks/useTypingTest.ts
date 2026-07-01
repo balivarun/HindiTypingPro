@@ -85,17 +85,19 @@ export const useTypingTest = (
     statsRef.current = newStats;
     setStats(newStats);
 
-    // Track key mistakes — only on forward progress (new character added)
-    if (value.length > prevLengthRef.current && value.length <= paragraph.length) {
-      const lastPos = value.length - 1;
-      if (value[lastPos] !== paragraph[lastPos]) {
-        const missedChar = paragraph[lastPos];
+    // Track key mistakes using codepoint arrays (handles Devanagari combining chars)
+    const typedArr = [...value.normalize('NFC')];
+    const paraArr = [...paragraph.normalize('NFC')];
+    if (typedArr.length > prevLengthRef.current && typedArr.length <= paraArr.length) {
+      const lastPos = typedArr.length - 1;
+      if (typedArr[lastPos] !== paraArr[lastPos]) {
+        const missedChar = paraArr[lastPos];
         setKeyMistakes(prev => ({ ...prev, [missedChar]: (prev[missedChar] || 0) + 1 }));
       }
     }
-    prevLengthRef.current = value.length;
+    prevLengthRef.current = typedArr.length;
 
-    if (value.length >= paragraph.length) {
+    if ([...value].length >= [...paragraph].length) {
       stopTimer();
       setStatus('finished');
     }

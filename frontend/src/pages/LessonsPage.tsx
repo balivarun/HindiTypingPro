@@ -191,6 +191,7 @@ const LessonPractice = ({ lesson, onBack }: { lesson: Lesson; onBack: () => void
             currentIndex={currentIndex}
             onInput={handleInput}
             isFinished={false}
+            layout="INSCRIPT"
           />
           {status === 'idle' && (
             <p className="text-sm text-gray-400 dark:text-gray-500 text-center">Click the text area and start typing</p>
