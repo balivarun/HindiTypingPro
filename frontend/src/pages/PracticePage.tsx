@@ -13,9 +13,28 @@ import PaymentWall from '../components/payment/PaymentWall';
 import ProgressBar from '../components/ui/ProgressBar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { formatTime } from '../utils/typingUtils';
-import { FiClock, FiZap, FiTarget, FiAlertCircle } from 'react-icons/fi';
+import { FiClock, FiZap, FiTarget, FiAlertCircle, FiEdit3, FiXCircle } from 'react-icons/fi';
 import { MdKeyboard, MdKeyboardHide } from 'react-icons/md';
 import toast from 'react-hot-toast';
+
+const DAILY_LIMIT = 3;
+const LS_SESSIONS_KEY = 'htp_daily_sessions';
+
+const getTodaySessions = (): number => {
+  try {
+    const raw = localStorage.getItem(LS_SESSIONS_KEY);
+    if (!raw) return 0;
+    const { date, count } = JSON.parse(raw);
+    return date === new Date().toDateString() ? (count as number) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const incrementSession = () => {
+  const count = getTodaySessions() + 1;
+  localStorage.setItem(LS_SESSIONS_KEY, JSON.stringify({ date: new Date().toDateString(), count }));
+};
 
 const PracticePage = () => {
   const { user } = useAuth();
@@ -28,18 +47,24 @@ const PracticePage = () => {
   const [showResult, setShowResult] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(true);
   const [pressedKey, setPressedKey] = useState('');
+  const [customTextMode, setCustomTextMode] = useState(false);
+  const [customText, setCustomText] = useState('');
+  const [todaySessions, setTodaySessions] = useState(getTodaySessions);
+  const [sessionCounted, setSessionCounted] = useState(false);
   const clearKeyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Null while AuthContext is still hydrating from localStorage
   const userLoaded = user !== null;
   const isPremium = user?.isPremium === true || user?.role === 'ADMIN';
+  const sessionsLeft = DAILY_LIMIT - todaySessions;
+  const dailyLimitReached = !isPremium && todaySessions >= DAILY_LIMIT;
 
-  const paragraph = currentTest?.paragraph ?? '';
+  const activeParagraph = customTextMode && customText.trim().length > 10
+    ? customText.trim()
+    : currentTest?.paragraph ?? '';
 
   const { typedText, status, stats, timeLeft, currentIndex, wpmHistory, keyMistakes, handleInput, resetTest } =
-    useTypingTest(paragraph, timerDuration, layout);
+    useTypingTest(activeParagraph, timerDuration, layout);
 
-  // Track physical key presses and clear highlight after 200ms
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       setPressedKey(e.key === ' ' ? 'Space' : e.key);
@@ -71,16 +96,21 @@ const PracticePage = () => {
   useEffect(() => {
     if (status === 'finished' && !showResult) {
       setShowResult(true);
+      if (!isPremium && !sessionCounted) {
+        incrementSession();
+        setTodaySessions(getTodaySessions());
+        setSessionCounted(true);
+      }
       saveResult();
     }
   }, [status]);
 
   const saveResult = async () => {
-    if (!currentTest) return;
+    if (!currentTest && !customTextMode) return;
     setSavingResult(true);
     try {
       await testService.saveResult({
-        testId: currentTest.id,
+        testId: currentTest?.id,
         speed: stats.wpm,
         accuracy: stats.accuracy,
         mistakes: stats.mistakes,
@@ -99,26 +129,39 @@ const PracticePage = () => {
     }
   };
 
-  const handleNewTest = () => { setShowResult(false); fetchNewTest(); };
-  const handleRetry = () => { setShowResult(false); resetTest(); };
+  const handleNewTest = () => {
+    setShowResult(false);
+    setSessionCounted(false);
+    fetchNewTest();
+  };
+  const handleRetry = () => {
+    setShowResult(false);
+    setSessionCounted(false);
+    resetTest();
+  };
   const handleDifficultyChange = (d: Difficulty) => { setDifficulty(d); fetchNewTest(d); };
 
-  const progress = paragraph.length > 0 ? (typedText.length / paragraph.length) * 100 : 0;
+  const progress = activeParagraph.length > 0 ? (typedText.length / activeParagraph.length) * 100 : 0;
 
-  // ── Payment wall ─────────────────────────────────────────────────────────────
-  // Wait for user to load so we don't flash the wall for premium users on refresh.
-  if (userLoaded && !isPremium) {
+  // Non-premium daily limit reached
+  if (userLoaded && dailyLimitReached) {
     return (
       <div className="space-y-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Typing Practice</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Get premium access to start practicing</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">You've used all 3 free sessions today</p>
         </div>
-        <PaymentWall onSuccess={() => { /* isPremium will flip via updateUser, re-render shows practice */ }} />
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 flex items-center gap-3 mb-2">
+          <span className="text-2xl">⏰</span>
+          <div>
+            <p className="font-semibold text-amber-800 dark:text-amber-300">Daily free limit reached (3/3)</p>
+            <p className="text-sm text-amber-700 dark:text-amber-400">Free sessions reset at midnight. Upgrade to practice unlimited!</p>
+          </div>
+        </div>
+        <PaymentWall onSuccess={() => { setTodaySessions(0); }} />
       </div>
     );
   }
-  // ─────────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
@@ -128,9 +171,15 @@ const PracticePage = () => {
           <p className="text-gray-500 dark:text-gray-400 mt-1">Select your layout and start typing</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400">
-            Premium
-          </div>
+          {isPremium ? (
+            <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400">
+              Premium
+            </div>
+          ) : (
+            <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
+              {sessionsLeft} free session{sessionsLeft !== 1 ? 's' : ''} left today
+            </div>
+          )}
           <button
             onClick={() => setShowKeyboard(v => !v)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors border ${
@@ -157,6 +206,44 @@ const PracticePage = () => {
           onReset={handleRetry}
           loading={loadingTest}
         />
+
+        {/* Custom text toggle (premium only) */}
+        {isPremium && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { setCustomTextMode(v => !v); resetTest(); }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                customTextMode
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+              }`}
+            >
+              <FiEdit3 size={14} />
+              Custom Text
+            </button>
+            {customTextMode && <span className="text-xs text-gray-400">Paste your Hindi text below</span>}
+          </div>
+        )}
+
+        {customTextMode && isPremium && (
+          <div className="relative">
+            <textarea
+              value={customText}
+              onChange={e => { setCustomText(e.target.value); resetTest(); }}
+              placeholder="अपना हिंदी टेक्स्ट यहाँ पेस्ट करें… (Paste your Hindi text here…)"
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/10 text-gray-900 dark:text-white font-hindi text-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            {customText && (
+              <button
+                onClick={() => { setCustomText(''); resetTest(); }}
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <FiXCircle size={18} />
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-3 gap-4">
           <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
@@ -187,6 +274,20 @@ const PracticePage = () => {
 
         {loadingTest ? (
           <div className="flex justify-center py-12"><LoadingSpinner size="lg" /></div>
+        ) : customTextMode && customText.trim().length > 10 ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-gray-700 dark:text-gray-300">Custom Text</h3>
+              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">CUSTOM</span>
+            </div>
+            <TypingArea
+              paragraph={activeParagraph}
+              typedText={typedText}
+              currentIndex={currentIndex}
+              onInput={handleInput}
+              isFinished={status === 'finished'}
+            />
+          </div>
         ) : currentTest ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -200,7 +301,7 @@ const PracticePage = () => {
               </span>
             </div>
             <TypingArea
-              paragraph={paragraph}
+              paragraph={activeParagraph}
               typedText={typedText}
               currentIndex={currentIndex}
               onInput={handleInput}
@@ -236,7 +337,7 @@ const PracticePage = () => {
           </div>
           <div className="flex gap-4 justify-center overflow-x-auto items-start">
             <KeyMappingPanel layout={layout} pressedKey={pressedKey} side="left" />
-            <VirtualKeyboard pressedKey={pressedKey} layout={layout} nextChar={paragraph[typedText.length] ?? ''} />
+            <VirtualKeyboard pressedKey={pressedKey} layout={layout} nextChar={activeParagraph[typedText.length] ?? ''} />
             <KeyMappingPanel layout={layout} pressedKey={pressedKey} side="right" />
           </div>
         </div>

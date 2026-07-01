@@ -70,6 +70,12 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean isPremium = false;
 
+    @Column(name = "exam_date")
+    private LocalDate examDate;
+
+    @Column(name = "exam_type")
+    private String examType;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));

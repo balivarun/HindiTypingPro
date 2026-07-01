@@ -1,8 +1,10 @@
 package com.hinditypingpro.controller;
 
+import com.hinditypingpro.dto.ApiResponse;
 import com.hinditypingpro.dto.CreateOrderResponse;
 import com.hinditypingpro.dto.VerifyPaymentRequest;
 import com.hinditypingpro.entity.User;
+import com.hinditypingpro.service.CouponService;
 import com.hinditypingpro.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +21,21 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/create-order")
-    public ResponseEntity<CreateOrderResponse> createOrder(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(paymentService.createOrder(user));
+    public ResponseEntity<CreateOrderResponse> createOrder(
+            @AuthenticationPrincipal User user,
+            @RequestParam(required = false) String couponCode) {
+        return ResponseEntity.ok(paymentService.createOrder(user, couponCode));
+    }
+
+    @GetMapping("/validate-coupon")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> validateCoupon(@RequestParam String code) {
+        CouponService.CouponValidation v = paymentService.validateCoupon(code);
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "valid", v.valid(),
+                "message", v.message(),
+                "discountPercent", v.discountPercent(),
+                "finalAmountPaise", v.finalAmountPaise()
+        )));
     }
 
     @PostMapping("/verify")
@@ -31,11 +46,6 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of("success", true, "isPremium", true));
     }
 
-    /**
-     * Test-mode endpoint: bypasses Razorpay and directly upgrades the user.
-     * Only works when RAZORPAY_KEY_ID is not configured (placeholder key).
-     * Remove or disable this in production once real keys are set.
-     */
     @PostMapping("/test-activate")
     public ResponseEntity<Map<String, Object>> testActivate(
             @RequestBody Map<String, String> body,

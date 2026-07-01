@@ -21,6 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.UUID;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -38,29 +40,42 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
+    private final CouponService couponService;
 
     public boolean isTestMode() {
         return PLACEHOLDER_KEY.equals(keyId);
     }
 
-    public CreateOrderResponse createOrder(User user) {
+    public CreateOrderResponse createOrder(User user, String couponCode) {
+        int finalAmount = priceInPaise;
+        int discountPercent = 0;
+
+        if (hasText(couponCode)) {
+            CouponService.CouponValidation validation = couponService.validateCoupon(couponCode, priceInPaise);
+            if (validation.valid()) {
+                finalAmount = validation.finalAmountPaise();
+                discountPercent = validation.discountPercent();
+                couponService.applyCoupon(couponCode);
+            }
+        }
+
         if (isTestMode()) {
-            // No real Razorpay keys — return a test order so developers can test the flow
             String fakeOrderId = "test_order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
             Payment payment = Payment.builder()
                     .user(user)
                     .razorpayOrderId(fakeOrderId)
-                    .amount(priceInPaise)
+                    .amount(finalAmount)
                     .currency("INR")
                     .status(Payment.Status.CREATED)
                     .build();
             paymentRepository.save(payment);
             return CreateOrderResponse.builder()
                     .orderId(fakeOrderId)
-                    .amount(priceInPaise)
+                    .amount(finalAmount)
                     .currency("INR")
                     .keyId(keyId)
                     .testMode(true)
+                    .discountPercent(discountPercent)
                     .build();
         }
 
@@ -68,7 +83,7 @@ public class PaymentService {
             RazorpayClient client = new RazorpayClient(keyId, keySecret);
 
             JSONObject orderRequest = new JSONObject();
-            orderRequest.put("amount", priceInPaise);
+            orderRequest.put("amount", finalAmount);
             orderRequest.put("currency", "INR");
             orderRequest.put("receipt", "rcpt_" + user.getId());
 
@@ -77,7 +92,7 @@ public class PaymentService {
             Payment payment = Payment.builder()
                     .user(user)
                     .razorpayOrderId(order.get("id"))
-                    .amount(priceInPaise)
+                    .amount(finalAmount)
                     .currency("INR")
                     .status(Payment.Status.CREATED)
                     .build();
@@ -85,15 +100,20 @@ public class PaymentService {
 
             return CreateOrderResponse.builder()
                     .orderId(order.get("id"))
-                    .amount(priceInPaise)
+                    .amount(finalAmount)
                     .currency("INR")
                     .keyId(keyId)
                     .testMode(false)
+                    .discountPercent(discountPercent)
                     .build();
 
         } catch (RazorpayException e) {
             throw new RuntimeException("Failed to create payment order: " + e.getMessage(), e);
         }
+    }
+
+    public CouponService.CouponValidation validateCoupon(String code) {
+        return couponService.validateCoupon(code, priceInPaise);
     }
 
     @Transactional

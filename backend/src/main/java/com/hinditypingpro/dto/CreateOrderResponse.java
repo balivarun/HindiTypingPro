@@ -15,4 +15,5 @@ public class CreateOrderResponse {
     private String currency;
     private String keyId;
     private Boolean testMode;
+    private Integer discountPercent;
 }

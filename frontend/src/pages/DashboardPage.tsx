@@ -7,7 +7,7 @@ import { User, TypingResult } from '../types';
 import StatCard from '../components/ui/StatCard';
 import StreakWidget from '../components/ui/StreakWidget';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { FiZap, FiTarget, FiActivity, FiAward, FiArrowRight } from 'react-icons/fi';
+import { FiZap, FiTarget, FiActivity, FiAward, FiArrowRight, FiCalendar } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
@@ -15,6 +15,34 @@ import {
 } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+
+const ExamCountdown = ({ examDate, examType }: { examDate: string; examType: string }) => {
+  const days = Math.max(0, Math.ceil((new Date(examDate).getTime() - Date.now()) / 86_400_000));
+  const urgency = days <= 7 ? 'red' : days <= 30 ? 'amber' : 'indigo';
+  const colors = {
+    red: 'from-red-500 to-rose-600',
+    amber: 'from-amber-500 to-orange-500',
+    indigo: 'from-indigo-500 to-blue-600',
+  };
+  return (
+    <div className={`bg-gradient-to-r ${colors[urgency]} text-white rounded-2xl p-5 flex items-center justify-between`}>
+      <div className="flex items-center gap-4">
+        <div className="bg-white/20 rounded-xl p-3">
+          <FiCalendar size={24} />
+        </div>
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide opacity-80">Exam Countdown</div>
+          <div className="text-lg font-bold">{examType}</div>
+          <div className="text-sm opacity-80">{new Date(examDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        </div>
+      </div>
+      <div className="text-center">
+        <div className="text-5xl font-black">{days}</div>
+        <div className="text-sm font-semibold opacity-80">{days === 1 ? 'day' : 'days'} left</div>
+      </div>
+    </div>
+  );
+};
 
 const DashboardPage = () => {
   const { user: authUser } = useAuth();
@@ -86,6 +114,22 @@ const DashboardPage = () => {
           Start Practice <FiArrowRight />
         </Link>
       </div>
+
+      {/* Exam countdown */}
+      {profile?.examDate && profile?.examType && (
+        <ExamCountdown examDate={profile.examDate} examType={profile.examType} />
+      )}
+      {!profile?.examDate && (
+        <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+            <FiCalendar size={20} />
+            <span className="text-sm">Set your exam date to see a countdown timer here</span>
+          </div>
+          <Link to="/profile" className="text-sm text-primary-600 dark:text-primary-400 font-medium hover:underline">
+            Set Date →
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total Tests" value={profile?.totalTests ?? 0} icon={<FiActivity />} color="text-primary-600" />

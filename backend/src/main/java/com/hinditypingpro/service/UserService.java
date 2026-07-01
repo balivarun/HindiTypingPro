@@ -9,6 +9,7 @@ import com.hinditypingpro.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -42,6 +43,9 @@ public class UserService {
                 .longestStreak(user.getLongestStreak())
                 .dailyGoal(user.getDailyGoal())
                 .todayWordCount(user.getTodayWordCount())
+                .isPremium(user.getIsPremium())
+                .examDate(user.getExamDate())
+                .examType(user.getExamType())
                 .build();
     }
 
@@ -49,6 +53,15 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setDailyGoal(goal);
+        userRepository.save(user);
+        return getProfile(email);
+    }
+
+    public UserProfileDto updateExamInfo(String email, String examType, LocalDate examDate) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setExamType(examType);
+        user.setExamDate(examDate);
         userRepository.save(user);
         return getProfile(email);
     }

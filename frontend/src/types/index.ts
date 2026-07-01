@@ -13,6 +13,8 @@ export interface User {
   longestStreak?: number;
   dailyGoal?: number;
   todayWordCount?: number;
+  examDate?: string;
+  examType?: string;
 }
 
 export interface AuthResponse {
@@ -82,4 +84,29 @@ export interface TypingStats {
   wrongChars: number;
   totalChars: number;
   timeElapsed: number;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  premiumUsers: number;
+  totalPayments: number;
+  totalRevenuePaise: number;
+  conversionRate: number;
+}
+
+export interface Coupon {
+  id: number;
+  code: string;
+  discountPercent: number;
+  maxUses: number | null;
+  usedCount: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CouponValidation {
+  valid: boolean;
+  message: string;
+  discountPercent: number;
+  finalAmountPaise: number;
 }

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -25,4 +26,7 @@ public class UserProfileDto {
     private Integer longestStreak;
     private Integer dailyGoal;
     private Integer todayWordCount;
+    private Boolean isPremium;
+    private LocalDate examDate;
+    private String examType;
 }
