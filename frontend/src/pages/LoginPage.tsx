@@ -135,7 +135,7 @@ const LoginPage = () => {
         </p>
 
         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-600 dark:text-blue-400">
-          <strong>Demo:</strong> admin@hinditypingpro.com / admin123
+          <strong>Admin:</strong> varunbali47@gmail.com / qwerty
         </div>
       </div>
     </div>

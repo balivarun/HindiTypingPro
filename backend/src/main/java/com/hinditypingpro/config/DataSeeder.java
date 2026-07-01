@@ -28,15 +28,22 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedAdmin() {
-        if (!userRepository.existsByEmail("admin@hinditypingpro.com")) {
+        // Remove the old placeholder admin if it still exists
+        userRepository.findByEmail("admin@hinditypingpro.com").ifPresent(old -> {
+            userRepository.delete(old);
+            log.info("Removed old placeholder admin: admin@hinditypingpro.com");
+        });
+
+        if (!userRepository.existsByEmail("varunbali47@gmail.com")) {
             User admin = User.builder()
-                    .name("Admin")
-                    .email("admin@hinditypingpro.com")
-                    .password(passwordEncoder.encode("admin123"))
+                    .name("Varun Bali")
+                    .email("varunbali47@gmail.com")
+                    .password(passwordEncoder.encode("qwerty"))
                     .role(User.Role.ADMIN)
+                    .isPremium(true)
                     .build();
             userRepository.save(admin);
-            log.info("Admin user seeded: admin@hinditypingpro.com / admin123");
+            log.info("Admin user seeded: varunbali47@gmail.com");
         }
     }
 
